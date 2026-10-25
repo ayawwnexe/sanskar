@@ -1,0 +1,778 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#008080">
+<title>Sanskar.exe — System Failure</title>
+<style>
+:root {
+  --teal: #008080;
+  --grey: #c0c0c0;
+  --dark: #404040;
+  --navy: #000080;
+  --white: #fff;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Tahoma, "MS Sans Serif", Arial, sans-serif;
+  font-size: 12px;
+  background: var(--teal);
+  color: #000;
+  overflow: hidden;
+  user-select: none;
+}
+button, input { font: inherit; }
+button {
+  color: #000;
+  background: var(--grey);
+  border: 2px solid;
+  border-color: #fff #404040 #404040 #fff;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+button:active, button.pressed {
+  border-color: #404040 #fff #fff #404040;
+  padding-top: 7px;
+  padding-bottom: 5px;
+}
+button:focus-visible { outline: 1px dotted #000; outline-offset: -5px; }
+.hidden { display: none !important; }
+
+/* BOOT SCREEN */
+#boot {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #000;
+  color: #c0ffc0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.boot-box { width: min(100%, 440px); }
+.boot-title { color: white; font-size: 23px; font-weight: bold; margin-bottom: 8px; }
+.boot-line { margin: 9px 0; line-height: 1.6; }
+.progress {
+  border: 1px solid #c0ffc0;
+  padding: 3px;
+  margin: 20px 0;
+  height: 23px;
+}
+#progressFill { width: 0; height: 100%; background: #c0ffc0; }
+#bootButton { color: #000; margin-top: 12px; }
+
+/* DESKTOP */
+#desktop {
+  position: fixed;
+  inset: 0 0 34px 0;
+  padding: 12px;
+  overflow: hidden;
+  background-color: var(--teal);
+  background-image: radial-gradient(#ffffff12 0.7px, transparent 0.7px);
+  background-size: 4px 4px;
+}
+.desktop-icons {
+  display: grid;
+  grid-auto-flow: row;
+  grid-template-columns: 76px;
+  grid-auto-rows: 83px;
+  width: 84px;
+  gap: 2px;
+}
+.desktop-icon {
+  width: 76px;
+  min-height: 74px;
+  color: white;
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 5px 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+  text-align: center;
+  text-shadow: 1px 1px #000;
+  line-height: 1.3;
+}
+.desktop-icon:active, .desktop-icon:focus {
+  border: 1px dotted white;
+  outline: none;
+  background: #00008055;
+  padding: 5px 2px;
+}
+.desk-emoji { font-size: 29px; line-height: 34px; text-shadow: none; }
+#desktopHint {
+  position: absolute;
+  bottom: 13px;
+  right: 14px;
+  color: #d8ffff;
+  font-size: 10px;
+  opacity: .8;
+}
+
+/* WINDOWS */
+.window {
+  position: absolute;
+  left: 110px;
+  top: 48px;
+  width: min(410px, calc(100vw - 112px));
+  max-height: calc(100% - 30px);
+  display: flex;
+  flex-direction: column;
+  background: var(--grey);
+  border: 2px solid;
+  border-color: white #404040 #404040 white;
+  box-shadow: 2px 2px 0 #0005;
+  z-index: 10;
+}
+.window.wide { width: min(500px, calc(100vw - 30px)); }
+.window.maximized {
+  left: 4px !important;
+  top: 4px !important;
+  width: calc(100% - 8px) !important;
+  max-height: calc(100% - 8px);
+  height: calc(100% - 8px);
+}
+.titlebar {
+  min-height: 26px;
+  background: var(--navy);
+  color: white;
+  font-weight: bold;
+  padding: 3px 4px 3px 7px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  cursor: default;
+  touch-action: pan-y;
+}
+.titlebar-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.title-actions { display: flex; gap: 3px; }
+.title-actions button {
+  min-width: 20px;
+  width: 22px;
+  height: 19px;
+  padding: 0;
+  font-weight: bold;
+  line-height: 12px;
+}
+.window-body {
+  padding: 13px;
+  overflow: auto;
+  min-height: 70px;
+  line-height: 1.55;
+}
+.window-footer {
+  padding: 0 10px 10px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.window h2 { font-size: 17px; margin: 0 0 10px; }
+.window h3 { font-size: 13px; margin: 14px 0 6px; }
+.window p { margin: 8px 0; }
+.inset {
+  border: 2px solid;
+  border-color: #808080 white white #808080;
+  background: #fff;
+  padding: 10px;
+}
+.hr { border: 0; border-top: 1px solid #808080; border-bottom: 1px solid white; margin: 13px 0; }
+.small { font-size: 10px; }
+.muted { color: #555; }
+.danger { color: #a00000; font-weight: bold; }
+.center { text-align: center; }
+.big-emoji { font-size: 38px; }
+.bar {
+  height: 16px;
+  border: 1px solid #777;
+  background: white;
+  padding: 2px;
+}
+.bar-fill { height: 100%; width: 0; background: #000080; transition: width .2s; }
+.statusbar {
+  border-top: 1px solid #808080;
+  box-shadow: inset 0 1px #fff;
+  padding: 4px 7px;
+  color: #444;
+}
+
+/* TASKBAR */
+#taskbar {
+  position: fixed;
+  z-index: 1000;
+  left: 0; right: 0; bottom: 0;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px;
+  background: var(--grey);
+  border-top: 2px solid white;
+}
+#startButton {
+  font-weight: bold;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 27px;
+}
+#startMenu {
+  position: fixed;
+  bottom: 33px;
+  left: 3px;
+  z-index: 1100;
+  width: 220px;
+  background: var(--grey);
+  border: 2px solid;
+  border-color: white #404040 #404040 white;
+  padding: 4px;
+  box-shadow: 2px 2px #0004;
+}
+.start-banner {
+  background: var(--navy);
+  color: white;
+  font-size: 19px;
+  font-weight: bold;
+  padding: 12px 8px;
+  margin-bottom: 5px;
+}
+.start-item {
+  display: block;
+  width: 100%;
+  border: 0;
+  text-align: left;
+  padding: 9px;
+}
+.start-item:hover { background: var(--navy); color: white; }
+#taskApps { display: flex; flex: 1; gap: 4px; overflow: hidden; }
+.task-app {
+  min-width: 0;
+  max-width: 150px;
+  flex: 1;
+  height: 26px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-align: left;
+  padding: 3px 7px;
+}
+.task-app.active { border-color: #404040 white white #404040; background: #b3b3b3; }
+#clock {
+  min-width: 64px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border: 1px solid;
+  border-color: #808080 white white #808080;
+  padding: 0 5px;
+  font-size: 11px;
+}
+
+/* MINI GAME */
+#bugs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin: 12px 0; }
+.bug {
+  min-height: 64px;
+  font-size: 24px;
+  padding: 7px 2px;
+}
+.bug small { display: block; font-size: 9px; }
+.bug.hit { opacity: .45; background: #9bff9b; }
+#gameMessage { min-height: 35px; }
+
+/* RESPONSIVE */
+@media (max-width: 520px) {
+  #desktop { padding: 7px; }
+  .desktop-icons {
+    grid-template-columns: 68px 68px;
+    grid-auto-rows: 78px;
+    width: 140px;
+  }
+  .desktop-icon { width: 66px; }
+  .desk-emoji { font-size: 27px; }
+  .window {
+    left: 12px;
+    top: 42px;
+    width: calc(100% - 24px);
+    max-height: calc(100% - 52px);
+  }
+  .window.wide { width: calc(100% - 24px); }
+  .window-body { padding: 11px; }
+  #desktopHint { display: none; }
+  .task-app { max-width: 85px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- BOOT SCREEN -->
+<div id="boot">
+  <div class="boot-box">
+    <div class="boot-title">SANSKAR.EXE</div>
+    <div>Copyright © Nobody. Nobody owns this mess.</div>
+    <hr style="border-color:#456">
+    <div id="bootLines">
+      <div class="boot-line">BIOS check ............ suspicious</div>
+      <div class="boot-line">Brain.exe ............. not responding</div>
+      <div class="boot-line">Common sense .......... file not found</div>
+      <div class="boot-line">Birthday protocol ..... detected</div>
+    </div>
+    <div class="progress"><div id="progressFill"></div></div>
+    <div id="bootStatus">Checking whether this guy is worth the RAM...</div>
+    <button id="bootButton" class="hidden">ENTER SYSTEM ▶</button>
+  </div>
+</div>
+
+<!-- DESKTOP -->
+<main id="desktop" class="hidden">
+  <div class="desktop-icons">
+    <button class="desktop-icon" data-open="welcome">
+      <span class="desk-emoji">💻</span><span>Welcome.txt</span>
+    </button>
+    <button class="desktop-icon" data-open="roast">
+      <span class="desk-emoji">⚠️</span><span>Roast.exe</span>
+    </button>
+    <button class="desktop-icon" data-open="lavish">
+      <span class="desk-emoji">🗂️</span><span>Lavish_Incident</span>
+    </button>
+    <button class="desktop-icon" data-open="game">
+      <span class="desk-emoji">🕹️</span><span>System_Recovery</span>
+    </button>
+    <button class="desktop-icon" data-open="final">
+      <span class="desk-emoji">🔒</span><span>FINAL_FINAL.txt</span>
+    </button>
+    <button class="desktop-icon" data-open="recycle">
+      <span class="desk-emoji">🗑️</span><span>Recycle Bin</span>
+    </button>
+  </div>
+  <div id="desktopHint">double-click an icon · explore at your own risk</div>
+</main>
+
+<!-- START MENU -->
+<div id="startMenu" class="hidden">
+  <div class="start-banner">SANSKAR<br><span style="font-size:11px;font-weight:normal">98 — questionable edition</span></div>
+  <button class="start-item" data-open="welcome">📄 &nbsp; About this computer</button>
+  <button class="start-item" data-open="roast">⚠️ &nbsp; Run diagnostics</button>
+  <button class="start-item" data-open="lavish">🗂️ &nbsp; Classified archives</button>
+  <button class="start-item" data-open="game">🕹️ &nbsp; System recovery</button>
+  <hr class="hr">
+  <button class="start-item" id="shutdown">⏻ &nbsp; Shut down</button>
+</div>
+
+<!-- TASKBAR -->
+<div id="taskbar" class="hidden">
+  <button id="startButton"><span>🪟</span> Start</button>
+  <div id="taskApps"></div>
+  <div id="clock">00:00</div>
+</div>
+
+<script>
+const $ = (s, root=document) => root.querySelector(s);
+const $$ = (s, root=document) => [...root.querySelectorAll(s)];
+const desktop = $("#desktop");
+const taskbar = $("#taskbar");
+const taskApps = $("#taskApps");
+let zTop = 20;
+let opened = {};
+let gameWon = false;
+let bugsHit = 0;
+
+const appData = {
+  welcome: { title: "Welcome.txt — Notepad", icon: "📄", width: "" },
+  roast: { title: "Roast.exe — System Diagnostics", icon: "⚠️", width: "wide" },
+  lavish: { title: "Lavish_Incident — Restricted", icon: "🗂️", width: "wide" },
+  game: { title: "System_Recovery — Game", icon: "🕹️", width: "wide" },
+  final: { title: "FINAL_FINAL.txt — Access Control", icon: "🔒", width: "" },
+  recycle: { title: "Recycle Bin", icon: "🗑️", width: "" }
+};
+
+function openApp(id) {
+  $("#startMenu").classList.add("hidden");
+  if (opened[id]) {
+    const w = opened[id];
+    w.classList.remove("hidden");
+    w.style.zIndex = ++zTop;
+    updateTaskApps();
+    return;
+  }
+
+  const app = appData[id];
+  if (!app) return;
+
+  const w = document.createElement("section");
+  w.className = "window " + app.width;
+  w.dataset.app = id;
+  w.style.zIndex = ++zTop;
+
+  const offset = Object.keys(opened).length * 17;
+  w.style.left = `clamp(8px, ${110 + offset}px, calc(100vw - 250px))`;
+  w.style.top = `${35 + offset % 100}px`;
+
+  w.innerHTML = `
+    <div class="titlebar">
+      <span class="titlebar-text">${app.icon} ${app.title}</span>
+      <div class="title-actions">
+        <button data-action="min" aria-label="Minimize">_</button>
+        <button data-action="max" aria-label="Maximize">□</button>
+        <button data-action="close" aria-label="Close">×</button>
+      </div>
+    </div>
+    <div class="window-body">${appContent(id)}</div>
+    <div class="statusbar" data-status>${getStatus(id)}</div>
+  `;
+
+  desktop.appendChild(w);
+  opened[id] = w;
+  wireWindow(w, id);
+  updateTaskApps();
+}
+
+function getStatus(id) {
+  return ({
+    welcome: "Ready. Probably.",
+    roast: "Diagnostic results: deeply concerning",
+    lavish: "CONFIDENTIAL · clearance level: questionable",
+    game: "Recovery utility v1.0",
+    final: "Permission required",
+    recycle: "6 objects · 0 useful decisions"
+  })[id];
+}
+
+function appContent(id) {
+  if (id === "welcome") return `
+    <div class="center big-emoji">💾</div>
+    <h2 class="center">Welcome to Sanskar's computer.</h2>
+    <p class="center">A birthday experience for one very questionable human.</p>
+    <hr class="hr">
+    <div class="inset">
+      <b>USER PROFILE: SANSKAR</b><br><br>
+      Status: <span class="danger">UNSTABLE</span><br>
+      Brain capacity: under investigation<br>
+      Birthday status: CONFIRMED<br>
+      Reason for friendship: still being audited<br>
+      Warranty: expired before installation
+    </div>
+    <p>Today's objective: explore the desktop, investigate the Lavish file, and recover the missing birthday message.</p>
+    <p class="muted small">Tip: icons open apps. The Start button also works. This is already more functionality than we expected from this system.</p>
+    <button data-launch="roast">Run diagnostics →</button>
+  `;
+
+  if (id === "roast") return `
+    <h2>⚠️ CRITICAL SYSTEM REPORT</h2>
+    <p>Subject: <b>SANSKAR</b></p>
+    <p>Running tests on the machine between the ears...</p>
+    <div class="inset">
+      <p>Common sense <span class="danger">FAILED</span></p>
+      <div class="bar"><div class="bar-fill" style="width:7%"></div></div>
+      <p>Unnecessary confidence <b>OVERCLOCKED</b></p>
+      <div class="bar"><div class="bar-fill" style="width:99%;background:#a00000"></div></div>
+      <p>Ability to act normal <span class="danger">FILE MISSING</span></p>
+      <div class="bar"><div class="bar-fill" style="width:2%"></div></div>
+      <p>Friendship compatibility <b>ANNOYINGLY HIGH</b></p>
+      <div class="bar"><div class="bar-fill" style="width:94%;background:#008000"></div></div>
+    </div>
+    <h3>Recommended fixes</h3>
+    <ol>
+      <li>Restart the brain.</li>
+      <li>Install common sense (not enough storage).</li>
+      <li>Remove at least 83% of the audacity.</li>
+      <li>Accept that you are the bug.</li>
+    </ol>
+    <p class="danger">WARNING: The user may be too delusional to understand this report.</p>
+    <button data-launch="game">Attempt system recovery →</button>
+  `;
+
+  if (id === "lavish") return `
+    <div class="center big-emoji">🗂️</div>
+    <h2 class="center">THE LAVISH INCIDENT</h2>
+    <p class="center danger">RESTRICTED ARCHIVE · DO NOT LEAK</p>
+    <div class="inset">
+      <b>CASE ID:</b> L-0001<br>
+      <b>SUBJECTS:</b> Sanskar / Lavish<br>
+      <b>RELATIONSHIP:</b> Formerly connected<br>
+      <b>CASE STATUS:</b> Permanently living rent-free in the lore
+    </div>
+    <h3>Recovered records</h3>
+    <p>Some names don't disappear. They just become part of the historical record.</p>
+    <p>Lavish has been added to the system's legacy files. The details remain classified because this archive has standards. Barely.</p>
+    <div class="inset">
+      <b>ARCHIVE NOTE #001</b>
+      <p>Years later, this machine is still processing the lore.</p>
+      <p>Estimated time remaining: <span class="danger">UNKNOWN</span></p>
+    </div>
+    <p class="muted small">No further context available. The system refuses to elaborate. We respect the mystery.</p>
+    <button data-launch="roast">Return to the investigation</button>
+  `;
+
+  if (id === "game") return `
+    <h2>🕹️ SYSTEM RECOVERY PROTOCOL</h2>
+    <p>The computer is infected with <b>3 critical bugs</b>. Find them to restore the birthday file.</p>
+    <p>Tap all three corrupted sectors. It's literally three clicks. If this is too difficult, we'll have to reconsider the user.</p>
+    <div class="inset">
+      <b>RECOVERY PROGRESS:</b> <span id="bugCount">${bugsHit}/3</span>
+      <div class="bar" style="margin-top:8px"><div id="gameProgress" class="bar-fill" style="width:${bugsHit/3*100}%"></div></div>
+    </div>
+    <div id="bugs">
+      ${[0,1,2,3,4,5].map(i => `<button class="bug" data-bug="${i}" aria-label="Scan sector ${i+1}">${[0,1,2,3,4,5].includes(i) ? "💾" : "?"}<small>SECTOR ${i+1}</small></button>`).join("")}
+    </div>
+    <p id="gameMessage" aria-live="polite">Scan a sector. Pray for the hardware.</p>
+    <p class="muted small">Warning: recovery may reveal that the real bug was the user all along.</p>
+    <button data-reset-game>Restart recovery</button>
+  `;
+
+  if (id === "final") return `
+    <div class="center big-emoji">🔒</div>
+    <h2 class="center">FINAL_FINAL.txt</h2>
+    <p class="center">This file is protected by advanced security.</p>
+    <div class="inset">
+      <b>ACCESS DENIED</b>
+      <p>Required: complete the system recovery challenge.</p>
+      <p>Current clearance: ${gameWon ? "BIRTHDAY ADMIN" : "ABSOLUTE RANDOM"}</p>
+    </div>
+    ${gameWon ? `
+      <h3>ACCESS GRANTED</h3>
+      <div class="inset">
+        <p>Happy birthday, Sanskar.</p>
+        <p>Another year older, and somehow the bugs remain unfixed. An incredible achievement, honestly.</p>
+        <p>Jokes aside, I'm glad you're in my life. Thanks for being someone I can share the random stuff, the stupid moments, and the actual important things with.</p>
+        <p>I hope this year gives you good memories, people who genuinely care about you, and a lot of reasons to be happy.</p>
+        <p>Keep being you, you absolute system error.</p>
+        <p><b>Happy birthday, choom. 🤝</b></p>
+      </div>
+      <p class="muted small">END OF FILE · Friendship license renewed for another year.</p>
+    ` : `
+      <p>Complete System_Recovery first. Even the birthday message has better security than this guy's brain.</p>
+      <button data-launch="game">Open System Recovery</button>
+    `}
+  `;
+
+  if (id === "recycle") return `
+    <div class="center big-emoji">🗑️</div>
+    <h2 class="center">Recycle Bin</h2>
+    <p>Items currently stored here:</p>
+    <div class="inset">
+      <p>🗑️ Common sense (deleted)</p>
+      <p>🗑️ Brain cells (0 bytes)</p>
+      <p>🗑️ The ability to be normal (unsupported format)</p>
+      <p>🗑️ Lavish lore (cannot be permanently deleted)</p>
+    </div>
+    <p>Would you like to restore common sense?</p>
+    <button data-fake-restore>Restore</button>
+    <p id="restoreMessage" aria-live="polite"></p>
+  `;
+}
+
+function wireWindow(w, id) {
+  w.addEventListener("pointerdown", () => { w.style.zIndex = ++zTop; });
+
+  w.querySelectorAll("[data-action]").forEach(btn => {
+    btn.addEventListener("click", e => {
+      e.stopPropagation();
+      const action = btn.dataset.action;
+      if (action === "close") {
+        w.remove();
+        delete opened[id];
+        updateTaskApps();
+      }
+      if (action === "min") {
+        w.classList.add("hidden");
+        updateTaskApps();
+      }
+      if (action === "max") {
+        w.classList.toggle("maximized");
+      }
+    });
+  });
+
+  // Drag windows using their title bars; keep controls clickable.
+  const bar = w.querySelector(".titlebar");
+  let drag = null;
+  bar.addEventListener("pointerdown", e => {
+    if (e.target.closest("button") || w.classList.contains("maximized")) return;
+    const rect = w.getBoundingClientRect();
+    drag = { x:e.clientX-rect.left, y:e.clientY-rect.top };
+    bar.setPointerCapture(e.pointerId);
+  });
+  bar.addEventListener("pointermove", e => {
+    if (!drag) return;
+    const maxX = Math.max(0, desktop.clientWidth - w.offsetWidth);
+    const maxY = Math.max(0, desktop.clientHeight - 40);
+    w.style.left = Math.max(0, Math.min(maxX, e.clientX-drag.x)) + "px";
+    w.style.top = Math.max(0, Math.min(maxY, e.clientY-drag.y)) + "px";
+  });
+  bar.addEventListener("pointerup", () => drag = null);
+  bar.addEventListener("lostpointercapture", () => drag = null);
+
+  w.querySelectorAll("[data-launch]").forEach(btn => {
+    btn.addEventListener("click", () => openApp(btn.dataset.launch));
+  });
+
+  w.querySelectorAll("[data-bug]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (btn.classList.contains("hit")) return;
+      btn.classList.add("hit");
+      btn.textContent = "💥";
+      const small = document.createElement("small");
+      small.textContent = "FIXED";
+      btn.appendChild(small);
+      bugsHit++;
+      $("#bugCount", w).textContent = `${bugsHit}/3`;
+      $("#gameProgress", w).style.width = `${Math.min(100, bugsHit/3*100)}%`;
+      const msg = $("#gameMessage", w);
+
+      if (bugsHit >= 3) {
+        gameWon = true;
+        msg.innerHTML = "<b>RECOVERY COMPLETE.</b> Against all odds, the system has survived.";
+        w.querySelectorAll("[data-bug]").forEach(b => b.disabled = true);
+        w.querySelector("[data-status]").textContent = "Recovery complete · FINAL_FINAL.txt unlocked";
+        // Refresh the final file if it's open.
+        if (opened.final) {
+          opened.final.querySelector(".window-body").innerHTML = appContent("final");
+          wireContentButtons(opened.final, "final");
+        }
+        const unlock = document.createElement("button");
+        unlock.textContent = "Open unlocked birthday file →";
+        unlock.style.marginTop = "8px";
+        unlock.addEventListener("click", () => openApp("final"));
+        msg.appendChild(document.createElement("br"));
+        msg.appendChild(unlock);
+      } else {
+        msg.textContent = `Sector repaired. ${3-bugsHit} bug(s) remaining. The IT department (you) is doing okay.`;
+      }
+    });
+  });
+
+  w.querySelectorAll("[data-reset-game]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      bugsHit = 0;
+      gameWon = false;
+      openApp("game");
+      w.remove();
+      delete opened.game;
+      openApp("game");
+    });
+  });
+
+  w.querySelectorAll("[data-fake-restore]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      $("#restoreMessage", w).textContent = "ERROR 404: common sense could not be located.";
+    });
+  });
+}
+
+function wireContentButtons(w, id) {
+  w.querySelectorAll("[data-launch]").forEach(btn => {
+    btn.addEventListener("click", () => openApp(btn.dataset.launch));
+  });
+}
+
+function updateTaskApps() {
+  taskApps.innerHTML = "";
+  Object.entries(opened).forEach(([id, w]) => {
+    const b = document.createElement("button");
+    b.className = "task-app" + (!w.classList.contains("hidden") ? " active" : "");
+    b.textContent = appData[id].icon + " " + appData[id].title.split(" — ")[0];
+    b.title = appData[id].title;
+    b.addEventListener("click", () => {
+      if (!w.classList.contains("hidden") && Number(w.style.zIndex) === zTop) {
+        w.classList.add("hidden");
+      } else {
+        w.classList.remove("hidden");
+        w.style.zIndex = ++zTop;
+      }
+      updateTaskApps();
+    });
+    taskApps.appendChild(b);
+  });
+}
+
+$$("[data-open]").forEach(btn => {
+  btn.addEventListener("click", () => openApp(btn.dataset.open));
+});
+
+// Desktop double-click feel on computers, single tap on phones.
+$$(".desktop-icon").forEach(btn => {
+  let lastTap = 0;
+  btn.addEventListener("click", () => {
+    const now = Date.now();
+    if (matchMedia("(hover: none)").matches || now-lastTap < 450) {
+      openApp(btn.dataset.open);
+    } else {
+      lastTap = now;
+      btn.style.background = "#00008055";
+      setTimeout(() => btn.style.background = "", 500);
+    }
+  });
+});
+
+$("#startButton").addEventListener("click", () => {
+  $("#startMenu").classList.toggle("hidden");
+});
+document.addEventListener("pointerdown", e => {
+  if (!e.target.closest("#startMenu") && !e.target.closest("#startButton")) {
+    $("#startMenu").classList.add("hidden");
+  }
+});
+$("#shutdown").addEventListener("click", () => {
+  $("#startMenu").classList.add("hidden");
+  desktop.classList.add("hidden");
+  taskbar.classList.add("hidden");
+  $("#boot").classList.remove("hidden");
+  $("#bootButton").textContent = "BOOT AGAIN ↻";
+  $("#bootButton").classList.remove("hidden");
+  $("#bootStatus").textContent = "System shut down. Sanskar remains unresolved.";
+  $("#progressFill").style.width = "100%";
+});
+
+function updateClock() {
+  const d = new Date();
+  $("#clock").textContent = d.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
+}
+updateClock();
+setInterval(updateClock, 15000);
+
+// Boot progress and entrance
+const bootButton = $("#bootButton");
+const fill = $("#progressFill");
+const status = $("#bootStatus");
+let booted = false;
+function enterSystem() {
+  booted = true;
+  $("#boot").classList.add("hidden");
+  desktop.classList.remove("hidden");
+  taskbar.classList.remove("hidden");
+  openApp("welcome");
+}
+function bootSequence() {
+  bootButton.classList.add("hidden");
+  fill.style.width = "0";
+  status.textContent = "Checking whether this guy is worth the RAM...";
+  let p = 0;
+  const interval = setInterval(() => {
+    p += 20;
+    fill.style.width = p + "%";
+    if (p === 20) status.textContent = "Loading personality... failed to locate.";
+    if (p === 40) status.textContent = "Installing common sense... insufficient disk space.";
+    if (p === 60) status.textContent = "Recovering friendship archives...";
+    if (p === 80) status.textContent = "Birthday detected. Proceed with caution.";
+    if (p >= 100) {
+      clearInterval(interval);
+      status.textContent = "SYSTEM READY. EXPECT NOTHING TO WORK.";
+      bootButton.classList.remove("hidden");
+    }
+  }, 220);
+}
+bootButton.addEventListener("click", enterSystem);
+bootSequence();
+</script>
+</body>
+</html>
